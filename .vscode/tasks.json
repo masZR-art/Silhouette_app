@@ -1,0 +1,24 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Flutter: Analyze",
+      "type": "shell",
+      "command": "flutter analyze",
+      "group": "test",
+      "problemMatcher": "$dart-analyze"
+    },
+    {
+      "label": "Flutter: Test",
+      "type": "shell",
+      "command": "flutter test",
+      "group": "test"
+    },
+    {
+      "label": "Flutter: Build Windows Release",
+      "type": "shell",
+      "command": "flutter build windows --release",
+      "group": "build"
+    }
+  ]
+}
