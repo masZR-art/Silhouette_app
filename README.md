@@ -42,7 +42,7 @@ Flutter native UI
   -> WebRTC DataChannel: encrypted messages, receipts, and attachments
 ```
 
-Chat content, attachments, and room keys must never be sent to the signaling server. See [Development Guide](docs/DEVELOPMENT.md) and [Security Policy](SECURITY.md).
+Chat content, attachments, and room keys must never be sent to the signaling server. New developers should start with the [Beginner Tutorial](docs/BEGINNER_TUTORIAL.md), then read the [Development Guide](docs/DEVELOPMENT.md) and [Security Policy](SECURITY.md).
 
 ## Production Service
 
