@@ -1,122 +1,112 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:window_manager/window_manager.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'services/auth_service.dart';
+import 'ui/login_screen.dart';
+import 'ui/main_shell.dart';
+import 'ui/theme.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+  const options = WindowOptions(
+    size: Size(460, 650),
+    minimumSize: Size(430, 610),
+    maximumSize: Size(540, 760),
+    center: true,
+    title: 'Silhouette',
+    backgroundColor: Colors.transparent,
+  );
+  await windowManager.waitUntilReadyToShow(options, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+  final preferences = await SharedPreferences.getInstance();
+  runApp(SilhouetteApp(preferences: preferences));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SilhouetteApp extends StatefulWidget {
+  const SilhouetteApp({super.key, required this.preferences});
+  final SharedPreferences preferences;
 
-  // This widget is the root of your application.
+  @override
+  State<SilhouetteApp> createState() => _SilhouetteAppState();
+}
+
+class _SilhouetteAppState extends State<SilhouetteApp> {
+  final AuthService _auth = AuthService();
+  AppUser? _user;
+  bool _checkingSession = true;
+  late ThemeMode _themeMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _themeMode = widget.preferences.getBool('light_theme') == true
+        ? ThemeMode.light
+        : ThemeMode.dark;
+    _restoreSession();
+  }
+
+  Future<void> _restoreSession() async {
+    final user = await _auth.restoreSession();
+    if (!mounted) return;
+    setState(() {
+      _user = user;
+      _checkingSession = false;
+    });
+    if (user != null) await _showMainWindow();
+  }
+
+  Future<void> _showMainWindow() async {
+    await windowManager.setMaximumSize(const Size(1920, 1200));
+    await windowManager.setMinimumSize(const Size(900, 620));
+    await windowManager.setSize(const Size(1120, 760), animate: true);
+    await windowManager.center(animate: true);
+  }
+
+  Future<void> _signedIn(AppUser user) async {
+    setState(() => _user = user);
+    await _showMainWindow();
+  }
+
+  Future<void> _logout() async {
+    await _auth.logout();
+    setState(() => _user = null);
+    await windowManager.setMinimumSize(const Size(430, 610));
+    await windowManager.setMaximumSize(const Size(540, 760));
+    await windowManager.setSize(const Size(460, 650), animate: true);
+    await windowManager.center(animate: true);
+  }
+
+  void _toggleTheme() {
+    final light = _themeMode != ThemeMode.light;
+    widget.preferences.setBool('light_theme', light);
+    setState(() => _themeMode = light ? ThemeMode.light : ThemeMode.dark);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+      debugShowCheckedModeBanner: false,
+      title: 'Silhouette',
+      theme: buildSilhouetteTheme(Brightness.light),
+      darkTheme: buildSilhouetteTheme(Brightness.dark),
+      themeMode: _themeMode,
+      home: _checkingSession
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : _user == null
+          ? LoginScreen(
+              auth: _auth,
+              onSignedIn: _signedIn,
+              onToggleTheme: _toggleTheme,
+            )
+          : MainShell(
+              user: _user!,
+              onLogout: _logout,
+              onToggleTheme: _toggleTheme,
             ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }
