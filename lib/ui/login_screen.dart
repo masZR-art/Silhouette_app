@@ -231,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ),
                         validator: (value) =>
-                            (value?.length ?? 0) < 10 ? '密码至少需要 10 位' : null,
+                            (value?.length ?? 0) < 8 ? '密码至少需要 8 位' : null,
                       ),
                     ] else ...[
                       TextFormField(

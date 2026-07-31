@@ -147,7 +147,7 @@ class AuthService {
   String _friendlyError(String? error) => switch (error) {
     'INVALID_LOGIN' => '邮箱或密码不正确',
     'EMAIL_EXISTS' => '该邮箱已经注册',
-    'INVALID_SIGNUP' => '请填写有效信息，密码至少 10 位',
+    'INVALID_SIGNUP' => '请填写有效信息，密码至少 8 位',
     'INVALID_EMAIL_CODE' => '验证码不正确或已过期',
     'SMTP_NOT_CONFIGURED' => '邮件服务尚未配置',
     'CODE_RATE_LIMIT' => '发送过于频繁，请稍后再试',
